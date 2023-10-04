@@ -1,0 +1,4 @@
+bs4>=0.0.1
+matplotlib>=3.6.3
+pandas>=1.5.2
+yahoo-fin==0.8.9.1
