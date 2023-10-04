@@ -52,9 +52,3 @@ for col in data.columns[1:]:
 if not(os.path.exists("data/")):
     os.mkdir("data/")
 data.to_csv("data/data.csv", index = False)
-
-# converting to m-o-m growth rates
-data_gr = data.copy()
-for col in data_gr.columns[1:]:
-    data_gr[col] = data_gr[col] / data_gr[col].shift(1) - 1
-data_gr.to_csv("data/data_gr.csv", index = False)
