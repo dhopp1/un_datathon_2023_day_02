@@ -1,5 +1,7 @@
 bs4>=0.0.1
 matplotlib>=3.6.3
+nowcast-lstm>=0.2.4
 openpyxl>=3.1.2
 pandas>=1.5.2
+scikit-learn>=1.2.0
 yahoo-fin==0.8.9.1

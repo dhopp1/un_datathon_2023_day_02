@@ -8,20 +8,25 @@ from nowcast_lstm.model_selection import variable_selection, hyperparameter_tuni
 # sys.path.append("path/containing/library/folder/")
 from datathon.modelling_helper import min_max_scale_df
 
+# data setup
 data = pd.read_csv("data/data.csv", parse_dates = ["date"])
+
+# the name of the target variable
 target = "exports_usd"
 
+# The dates for the train and test set
 train_start = "2019-01-01"
 test_start = "2023-01-01"
 
 train = data.loc[lambda x: (x.date >= train_start) & (x.date < test_start), :].reset_index(drop = True)
-unscaled_train = train.copy()
+unscaled_train = train.copy() # preserve the unscaled data to be able to unscale
 train = min_max_scale_df(train, unscaled_train)
 test = data.loc[lambda x: (x.date >= train_start), :].reset_index(drop = True)
 test = min_max_scale_df(test, unscaled_train)
 
 # set to true if performing model selection
 if False:
+    # nowcast_lstm's function for selecting hyperparameters and variables for a model
     chosen_model = select_model(
         data = train,
         target_variable = target,
@@ -36,10 +41,12 @@ if False:
         initial_ordering = "feature_contribution"
     )
     
+    # take note of the chosen hyperparameters and variables
     print(chosen_model.variables.values[0])
     print(chosen_model.hyperparameters.values[0])
 
 # model inference
+# instantiate the model with the chosen hyperparameters and variables
 variables = ["crude_brent", "vostochny", "primorsk"]
 train = train.loc[: , ["date", target] + variables]
 test = test.loc[: , ["date", target] + variables]
@@ -58,23 +65,22 @@ model.train()
 
 preds = model.predict(test)
 
-# unscaling
+# unscaling - get results in the original unit of the target variable
 unscaled_actuals = test.copy()
 unscaled_actuals = min_max_scale_df(test, unscaled_train, unscale = True)
 unscaled_preds = test.copy()
 unscaled_preds = unscaled_preds.drop(target, axis = 1).merge(preds.loc[:, ["date", "predictions"]], on = "date", how = "left").rename(columns = {"predictions": target})
 unscaled_preds = min_max_scale_df(unscaled_preds, unscaled_train, unscale = True)
 
-# plotting
+# plotting and writing out the predictions
 final_df = pd.DataFrame({
     "date": unscaled_actuals.date,
     "actuals": unscaled_actuals[target],
     "predictions": unscaled_preds[target]
 })
 
-final_df.to_csv("predictions.csv", index = False)
+final_df.to_csv("lstm_predictions.csv", index = False)
 
 final_df.set_index("date").plot()
 plt.axvline(pd.to_datetime(test_start))
-plt.savefig("plot.png")
-
+plt.savefig("lstm_plot.png")
